@@ -1,6 +1,8 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.repositories.item_repository import item_repository
 from app.repositories.user_repository import user_repository
 
 USER_PAYLOAD = {"email": "test@example.com", "password": "testpass123", "name": "Test User"}
@@ -45,6 +47,41 @@ async def test_update_email_to_another_users_email_rejected(
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "Email already registered"
+
+
+async def test_delete_user(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+    me = (await client.get("/api/v1/users/me", headers=auth_headers)).json()
+    response = await client.delete(f"/api/v1/users/{me['id']}", headers=auth_headers)
+    assert response.status_code == 204
+
+
+async def test_read_other_user_forbidden(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+    other = await client.post("/api/v1/users/", json=OTHER_PAYLOAD)
+
+    response = await client.get(f"/api/v1/users/{other.json()['id']}", headers=auth_headers)
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Not authorized"
+
+
+async def test_read_own_user(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+    me = (await client.get("/api/v1/users/me", headers=auth_headers)).json()
+
+    response = await client.get(f"/api/v1/users/{me['id']}", headers=auth_headers)
+    assert response.status_code == 200
+    assert response.json() == me
+
+
+async def test_delete_own_user_removes_their_items(
+    client: AsyncClient, auth_headers: dict[str, str], db_session: AsyncSession
+) -> None:
+    me = (await client.get("/api/v1/users/me", headers=auth_headers)).json()
+    await client.post("/api/v1/items/", json={"title": "Owned"}, headers=auth_headers)
+
+    response = await client.delete(f"/api/v1/users/{me['id']}", headers=auth_headers)
+    assert response.status_code == 204
+
+    remaining = await item_repository.get_multi_by_owner(db_session, me["id"])
+    assert list(remaining) == []
 
 
 async def test_update_email_to_own_email_allowed(

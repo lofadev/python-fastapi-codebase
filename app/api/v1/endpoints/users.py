@@ -25,12 +25,11 @@ async def read_current_user(current_user: CurrentUser) -> User:
 
 
 @router.get("/{user_id}", response_model=User)
-async def read_user(user_id: int, db: DbSession, current_user: CurrentUser) -> User:
-    """Get a user by ID."""
-    user = await user_service.repository.get(db, user_id)
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return user
+async def read_user(user_id: int, current_user: CurrentUser) -> User:
+    """Get a user by ID. Users may only read themselves."""
+    if current_user.id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    return current_user
 
 
 @router.patch("/{user_id}", response_model=User)

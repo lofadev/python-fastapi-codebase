@@ -53,6 +53,9 @@ class UserService:
             return None
         if not verify_password(password, user.hashed_password):
             return None
+        # Same generic 401 as a wrong password, so login does not reveal account status.
+        if not user.is_active:
+            return None
         return user
 
     async def update_user(

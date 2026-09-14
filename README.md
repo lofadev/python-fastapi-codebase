@@ -51,7 +51,7 @@ tests/                      # Async test suite (pytest-asyncio + httpx)
 | POST   | `/api/v1/users/`        | No   | Register a new user            |
 | POST   | `/api/v1/auth/login`    | No   | Login (OAuth2 form), get JWT   |
 | GET    | `/api/v1/users/me`      | Yes  | Current user profile           |
-| GET    | `/api/v1/users/{id}`    | Yes  | Get user by ID                 |
+| GET    | `/api/v1/users/{id}`    | Yes  | Get own profile by ID          |
 | PATCH  | `/api/v1/users/{id}`    | Yes  | Update own profile             |
 | DELETE | `/api/v1/users/{id}`    | Yes  | Delete own account             |
 | POST   | `/api/v1/items/`        | Yes  | Create an item                 |
