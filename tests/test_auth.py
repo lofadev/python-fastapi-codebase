@@ -1,4 +1,7 @@
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.repositories.user_repository import user_repository
 
 USER_PAYLOAD = {"email": "login@example.com", "password": "loginpass123", "name": "Login User"}
 

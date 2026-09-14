@@ -19,12 +19,10 @@ class BaseRepository[ModelT: Base, CreateT: BaseModel, UpdateT: BaseModel]:
         return result.scalars().first()
 
     async def get_multi(
-        self,
-        db: AsyncSession,
-        skip: int = 0,
-        limit: int = 100,
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 100
     ) -> Sequence[ModelT]:
-        result = await db.execute(select(self.model).offset(skip).limit(limit))
+        stmt = select(self.model).order_by(self.model.id).offset(skip).limit(limit)
+        result = await db.execute(stmt)
         return result.scalars().all()
 
     async def create(

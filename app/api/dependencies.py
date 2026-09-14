@@ -15,7 +15,8 @@ settings = get_settings()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
-DbSession = Annotated[AsyncSession, Depends(get_db)]
+# "function" scope commits before the response is sent, so a failed commit becomes a 500.
+DbSession = Annotated[AsyncSession, Depends(get_db, scope="function")]
 
 
 async def get_current_user(

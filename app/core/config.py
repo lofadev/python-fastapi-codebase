@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,13 +12,14 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "FastAPI Template"
     API_V1_STR: str = "/api/v1"
 
-    DATABASE_URL: str = "sqlite+aiosqlite:///./app.db"
+    DATABASE_URL: str = "postgresql+asyncpg://app:app@localhost:5433/app"
 
-    # Dev-only default; HS256 needs >= 32 bytes. Override via .env in production.
-    SECRET_KEY: str = "dev-only-insecure-secret-key-change-me-in-production"
+    # Required, no default: HS256 needs >= 32 bytes.
+    # Generate with: python -c "import secrets; print(secrets.token_hex(32))"
+    SECRET_KEY: str = Field(min_length=32)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    CORS_ORIGINS: list[str] = ["*"]
+    CORS_ORIGINS: list[str] = []
 
 
 @lru_cache

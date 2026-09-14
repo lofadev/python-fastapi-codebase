@@ -51,7 +51,7 @@ tests/                      # Async test suite (pytest-asyncio + httpx)
 | POST   | `/api/v1/users/`        | No   | Register a new user            |
 | POST   | `/api/v1/auth/login`    | No   | Login (OAuth2 form), get JWT   |
 | GET    | `/api/v1/users/me`      | Yes  | Current user profile           |
-| GET    | `/api/v1/users/{id}`    | Yes  | Get user by ID                 |
+| GET    | `/api/v1/users/{id}`    | Yes  | Get own profile by ID          |
 | PATCH  | `/api/v1/users/{id}`    | Yes  | Update own profile             |
 | DELETE | `/api/v1/users/{id}`    | Yes  | Delete own account             |
 | POST   | `/api/v1/items/`        | Yes  | Create an item                 |
@@ -63,29 +63,26 @@ tests/                      # Async test suite (pytest-asyncio + httpx)
 
 ## Testing
 
+Tests run against the `app_test` PostgreSQL database from `docker-compose.yml`, through the real `get_db` dependency (real commits):
+
 ```bash
+docker compose up -d --wait
 uv run pytest
 ```
 
-Tests run against an in-memory SQLite database with the `get_db` dependency overridden — no external services required.
+- The schema is rebuilt with Alembic (`downgrade base` → `upgrade head`) once per test session, and every table is truncated after each test.
+- Point the suite at another database with `TEST_DATABASE_URL`. It refuses to run unless the database name ends with `_test`, because it truncates every table.
 
 ## Configuration
 
 All settings live in `app/core/config.py` and are loaded from environment variables or `.env`:
 
-| Variable                      | Default                          | Description                          |
-|-------------------------------|----------------------------------|--------------------------------------|
-| `DATABASE_URL`                | `sqlite+aiosqlite:///./app.db`   | Async SQLAlchemy connection string   |
-| `SECRET_KEY`                  | `change-me-in-production`        | JWT signing key — change it!         |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30`                             | Access token lifetime                |
-| `CORS_ORIGINS`                | `["*"]`                          | Allowed CORS origins (JSON array)    |
-
-For PostgreSQL, install the driver and point `DATABASE_URL` at it:
-
-```bash
-uv add asyncpg
-# DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/dbname
-```
+| Variable                      | Default                                           | Description                          |
+|-------------------------------|---------------------------------------------------|--------------------------------------|
+| `DATABASE_URL`                | `postgresql+asyncpg://app:app@localhost:5433/app` | Async SQLAlchemy connection string   |
+| `SECRET_KEY`                  | _(required)_                                      | JWT signing key (min. 32 characters) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30`                                              | Access token lifetime                |
+| `CORS_ORIGINS`                | `[]`                                              | Allowed CORS origins (JSON array)    |
 
 ## Python 3.13 Notes
 
@@ -98,4 +95,3 @@ uv add asyncpg
 - Set a strong `SECRET_KEY` (e.g. `python -c "import secrets; print(secrets.token_hex(32))"`).
 - Restrict `CORS_ORIGINS` to your frontend origins.
 - Replace the startup `create_all` in `app/main.py` with [Alembic](https://alembic.sqlalchemy.org/) migrations.
-- Switch `DATABASE_URL` to PostgreSQL with `asyncpg`.
