@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.api.dependencies import CurrentUser, DbSession
 from app.schemas.user import User, UserCreate, UserUpdate
-from app.services.user_service import user_service
+from app.services.user_service import EmailAlreadyRegisteredError, user_service
 
 router = APIRouter()
 
@@ -12,8 +12,10 @@ async def create_user(user_in: UserCreate, db: DbSession) -> User:
     """Register a new user."""
     try:
         return await user_service.create_user(db, user_in)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except EmailAlreadyRegisteredError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+        )
 
 
 @router.get("/me", response_model=User)
@@ -42,7 +44,12 @@ async def update_user(
     if current_user.id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
 
-    user = await user_service.update_user(db, user_id, user_in)
+    try:
+        user = await user_service.update_user(db, user_id, user_in)
+    except EmailAlreadyRegisteredError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+        )
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
