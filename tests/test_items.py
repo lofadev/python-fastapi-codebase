@@ -1,3 +1,4 @@
+import pytest
 from httpx import AsyncClient
 
 
@@ -101,3 +102,35 @@ async def test_other_users_item_forbidden(client: AsyncClient, auth_headers: dic
 
     response = await client.get(f"/api/v1/items/{item['id']}", headers=other_headers)
     assert response.status_code == 403
+
+
+async def test_read_items_pagination(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
+    for i in range(5):
+        await client.post("/api/v1/items/", json={"title": f"Item {i}"}, headers=auth_headers)
+
+    # Over the maximum limit of 100
+    response = await client.get("/api/v1/items/?limit=101", headers=auth_headers)
+    assert response.status_code == 422
+
+    # Under the minimum limit of 1
+    response = await client.get("/api/v1/items/?limit=0", headers=auth_headers)
+    assert response.status_code == 422
+
+    # Negative skip
+    response = await client.get("/api/v1/items/?skip=-1", headers=auth_headers)
+    assert response.status_code == 422
+
+    # Normal pagination, ordered by ID
+    response1 = await client.get("/api/v1/items/?skip=0&limit=2", headers=auth_headers)
+    assert response1.status_code == 200
+    items1 = response1.json()
+    assert len(items1) == 2
+
+    response2 = await client.get("/api/v1/items/?skip=2&limit=2", headers=auth_headers)
+    assert response2.status_code == 200
+    items2 = response2.json()
+    assert len(items2) == 2
+
+    assert items1[0]["id"] < items1[1]["id"] < items2[0]["id"] < items2[1]["id"]

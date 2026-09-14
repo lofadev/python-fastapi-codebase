@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.api.dependencies import CurrentUser, DbSession
 from app.models.item import Item as ItemModel
@@ -27,8 +27,8 @@ async def create_item(item_in: ItemCreate, db: DbSession, current_user: CurrentU
 async def read_items(
     db: DbSession,
     current_user: CurrentUser,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
 ) -> list[Item]:
     """List items owned by the current user."""
     return await item_service.get_items_by_owner(db, current_user.id, skip=skip, limit=limit)

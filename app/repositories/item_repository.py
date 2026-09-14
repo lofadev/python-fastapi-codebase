@@ -10,15 +10,16 @@ from app.schemas.item import ItemCreate, ItemUpdate
 
 class ItemRepository(BaseRepository[Item, ItemCreate, ItemUpdate]):
     async def get_multi_by_owner(
-        self,
-        db: AsyncSession,
-        owner_id: int,
-        skip: int = 0,
-        limit: int = 100,
+        self, db: AsyncSession, owner_id: int, *, skip: int = 0, limit: int = 100
     ) -> Sequence[Item]:
-        result = await db.execute(
-            select(Item).where(Item.owner_id == owner_id).offset(skip).limit(limit)
+        stmt = (
+            select(self.model)
+            .filter(Item.owner_id == owner_id)
+            .order_by(Item.id)
+            .offset(skip)
+            .limit(limit)
         )
+        result = await db.execute(stmt)
         return result.scalars().all()
 
 
