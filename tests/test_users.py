@@ -35,6 +35,8 @@ async def test_create_user_short_password(client: AsyncClient) -> None:
         json={"email": "short@example.com", "password": "short", "name": "Short"},
     )
     assert response.status_code == 422
+
+
 async def test_update_email_to_another_users_email_rejected(
     client: AsyncClient, auth_headers: dict[str, str]
 ) -> None:
@@ -161,6 +163,7 @@ async def test_create_user_duplicate_email_race(
     assert response.status_code == 400
     assert response.json()["detail"] == "Email already registered"
 
+
 async def test_read_user_requires_auth(client: AsyncClient) -> None:
     response = await client.get("/api/v1/users/1")
     assert response.status_code == 401
@@ -179,7 +182,9 @@ async def test_update_own_user(client: AsyncClient, auth_headers: dict[str, str]
     assert response.json()["name"] == "Renamed"
 
 
-async def test_update_other_user_forbidden(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+async def test_update_other_user_forbidden(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
     response = await client.patch(
         "/api/v1/users/9999",
         json={"name": "Hacker"},

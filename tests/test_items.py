@@ -1,4 +1,3 @@
-import pytest
 from httpx import AsyncClient
 
 
@@ -81,13 +80,13 @@ async def test_update_item_null_description_clears_it(
 async def test_create_item_title_too_long(
     client: AsyncClient, auth_headers: dict[str, str]
 ) -> None:
-    response = await client.post(
-        "/api/v1/items/", json={"title": "t" * 256}, headers=auth_headers
-    )
+    response = await client.post("/api/v1/items/", json={"title": "t" * 256}, headers=auth_headers)
     assert response.status_code == 422
 
 
-async def test_other_users_item_forbidden(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+async def test_other_users_item_forbidden(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
     item = await _create_item(client, auth_headers)
 
     await client.post(
@@ -104,9 +103,7 @@ async def test_other_users_item_forbidden(client: AsyncClient, auth_headers: dic
     assert response.status_code == 403
 
 
-async def test_read_items_pagination(
-    client: AsyncClient, auth_headers: dict[str, str]
-) -> None:
+async def test_read_items_pagination(client: AsyncClient, auth_headers: dict[str, str]) -> None:
     for i in range(5):
         await client.post("/api/v1/items/", json={"title": f"Item {i}"}, headers=auth_headers)
 

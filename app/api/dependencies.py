@@ -37,7 +37,7 @@ async def get_current_user(
             raise credentials_exception
         user_id = int(subject)
     except (jwt.InvalidTokenError, ValueError):
-        raise credentials_exception
+        raise credentials_exception from None
 
     user = await user_repository.get(db, user_id)
     if user is None or not user.is_active:

@@ -12,9 +12,7 @@ def _check_password_bytes(password: str) -> str:
 
 
 # bcrypt rejects passwords over 72 bytes; max_length alone counts characters, not bytes.
-Password = Annotated[
-    str, Field(min_length=8, max_length=72), AfterValidator(_check_password_bytes)
-]
+Password = Annotated[str, Field(min_length=8, max_length=72), AfterValidator(_check_password_bytes)]
 
 
 class UserBase(BaseModel):

@@ -15,7 +15,7 @@ async def create_user(user_in: UserCreate, db: DbSession) -> User:
     except EmailAlreadyRegisteredError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
-        )
+        ) from None
 
 
 @router.get("/me", response_model=User)
@@ -48,7 +48,7 @@ async def update_user(
     except EmailAlreadyRegisteredError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
-        )
+        ) from None
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
