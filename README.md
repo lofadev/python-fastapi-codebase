@@ -73,19 +73,12 @@ Tests run against an in-memory SQLite database with the `get_db` dependency over
 
 All settings live in `app/core/config.py` and are loaded from environment variables or `.env`:
 
-| Variable                      | Default                          | Description                          |
-|-------------------------------|----------------------------------|--------------------------------------|
-| `DATABASE_URL`                | `sqlite+aiosqlite:///./app.db`   | Async SQLAlchemy connection string   |
-| `SECRET_KEY`                  | `change-me-in-production`        | JWT signing key — change it!         |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30`                             | Access token lifetime                |
-| `CORS_ORIGINS`                | `["*"]`                          | Allowed CORS origins (JSON array)    |
-
-For PostgreSQL, install the driver and point `DATABASE_URL` at it:
-
-```bash
-uv add asyncpg
-# DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/dbname
-```
+| Variable                      | Default                                           | Description                          |
+|-------------------------------|---------------------------------------------------|--------------------------------------|
+| `DATABASE_URL`                | `postgresql+asyncpg://app:app@localhost:5433/app` | Async SQLAlchemy connection string   |
+| `SECRET_KEY`                  | `change-me-in-production`                         | JWT signing key — change it!         |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30`                                              | Access token lifetime                |
+| `CORS_ORIGINS`                | `["*"]`                                           | Allowed CORS origins (JSON array)    |
 
 ## Python 3.13 Notes
 
@@ -98,4 +91,3 @@ uv add asyncpg
 - Set a strong `SECRET_KEY` (e.g. `python -c "import secrets; print(secrets.token_hex(32))"`).
 - Restrict `CORS_ORIGINS` to your frontend origins.
 - Replace the startup `create_all` in `app/main.py` with [Alembic](https://alembic.sqlalchemy.org/) migrations.
-- Switch `DATABASE_URL` to PostgreSQL with `asyncpg`.
