@@ -80,9 +80,9 @@ All settings live in `app/core/config.py` and are loaded from environment variab
 | Variable                      | Default                                           | Description                          |
 |-------------------------------|---------------------------------------------------|--------------------------------------|
 | `DATABASE_URL`                | `postgresql+asyncpg://app:app@localhost:5433/app` | Async SQLAlchemy connection string   |
-| `SECRET_KEY`                  | `change-me-in-production`                         | JWT signing key — change it!         |
+| `SECRET_KEY`                  | _(required)_                                      | JWT signing key (min. 32 characters) |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `30`                                              | Access token lifetime                |
-| `CORS_ORIGINS`                | `["*"]`                                           | Allowed CORS origins (JSON array)    |
+| `CORS_ORIGINS`                | `[]`                                              | Allowed CORS origins (JSON array)    |
 
 ## Python 3.13 Notes
 
