@@ -186,3 +186,43 @@ async def test_update_other_user_forbidden(client: AsyncClient, auth_headers: di
         headers=auth_headers,
     )
     assert response.status_code == 403
+
+
+async def test_create_read_update_delete(client: AsyncClient) -> None:
+    # 1. Create a user
+    payload = {"email": "e2e@example.com", "password": "e2epassword", "name": "E2E"}
+    create_response = await client.post("/api/v1/users/", json=payload)
+    assert create_response.status_code == 201
+    user_id = create_response.json()["id"]
+
+    # 2. Login
+    login_response = await client.post(
+        "/api/v1/auth/login",
+        data={"username": payload["email"], "password": payload["password"]},
+    )
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 3. Read profile
+    read_response = await client.get("/api/v1/users/me", headers=headers)
+    assert read_response.status_code == 200
+    assert read_response.json()["name"] == "E2E"
+
+    # 4. Update profile
+    update_response = await client.patch(
+        f"/api/v1/users/{user_id}", json={"name": "E2E Updated"}, headers=headers
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["name"] == "E2E Updated"
+
+    # 5. Delete profile
+    delete_response = await client.delete(f"/api/v1/users/{user_id}", headers=headers)
+    assert delete_response.status_code == 204
+
+    # 6. Verify deletion (login fails)
+    login_again = await client.post(
+        "/api/v1/auth/login",
+        data={"username": payload["email"], "password": payload["password"]},
+    )
+    assert login_again.status_code == 401
