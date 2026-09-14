@@ -7,16 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import app.models  # noqa: F401  # register models on Base.metadata
 from app.api.v1.router import api_router
 from app.core.config import get_settings
-from app.core.database import Base, engine
+from app.core.database import engine
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-    # Dev convenience; use Alembic migrations in production.
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
     yield
     await engine.dispose()
 
