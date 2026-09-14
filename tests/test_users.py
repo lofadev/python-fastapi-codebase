@@ -7,6 +7,7 @@ from app.repositories.user_repository import user_repository
 
 USER_PAYLOAD = {"email": "test@example.com", "password": "testpass123", "name": "Test User"}
 OTHER_PAYLOAD = {"email": "other@example.com", "password": "otherpass123", "name": "Other"}
+VIETNAMESE_CHAR = chr(0x1EC7)  # "ệ": 3 bytes in UTF-8
 
 
 async def test_create_user(client: AsyncClient) -> None:
@@ -95,6 +96,54 @@ async def test_update_email_to_own_email_allowed(
         headers=auth_headers,
     )
     assert response.status_code == 200
+
+
+@pytest.mark.parametrize("field", ["name", "email", "password"])
+async def test_update_user_null_field_rejected(
+    client: AsyncClient, auth_headers: dict[str, str], field: str
+) -> None:
+    me = (await client.get("/api/v1/users/me", headers=auth_headers)).json()
+
+    response = await client.patch(
+        f"/api/v1/users/{me['id']}", json={field: None}, headers=auth_headers
+    )
+    assert response.status_code == 422
+
+
+async def test_create_user_name_too_long(client: AsyncClient) -> None:
+    response = await client.post("/api/v1/users/", json={**USER_PAYLOAD, "name": "n" * 256})
+    assert response.status_code == 422
+
+
+async def test_password_over_72_bytes_rejected(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
+    password = VIETNAMESE_CHAR * 30  # 30 characters, 90 bytes
+
+    create = await client.post(
+        "/api/v1/users/",
+        json={"email": "vn@example.com", "password": password, "name": "VN"},
+    )
+    assert create.status_code == 422
+
+    me = (await client.get("/api/v1/users/me", headers=auth_headers)).json()
+    update = await client.patch(
+        f"/api/v1/users/{me['id']}", json={"password": password}, headers=auth_headers
+    )
+    assert update.status_code == 422
+
+
+async def test_password_of_exactly_72_bytes_accepted(client: AsyncClient) -> None:
+    password = VIETNAMESE_CHAR * 24  # 24 characters, 72 bytes
+    payload = {"email": "vn72@example.com", "password": password, "name": "VN"}
+
+    create = await client.post("/api/v1/users/", json=payload)
+    assert create.status_code == 201
+
+    login = await client.post(
+        "/api/v1/auth/login", data={"username": payload["email"], "password": password}
+    )
+    assert login.status_code == 200
 
 
 async def test_create_user_duplicate_email_race(

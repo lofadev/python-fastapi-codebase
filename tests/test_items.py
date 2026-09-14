@@ -54,6 +54,38 @@ async def test_delete_item(client: AsyncClient, auth_headers: dict[str, str]) ->
     assert response.status_code == 404
 
 
+async def test_update_item_null_title_rejected(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
+    item = await _create_item(client, auth_headers)
+
+    response = await client.patch(
+        f"/api/v1/items/{item['id']}", json={"title": None}, headers=auth_headers
+    )
+    assert response.status_code == 422
+
+
+async def test_update_item_null_description_clears_it(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
+    item = await _create_item(client, auth_headers)
+
+    response = await client.patch(
+        f"/api/v1/items/{item['id']}", json={"description": None}, headers=auth_headers
+    )
+    assert response.status_code == 200
+    assert response.json()["description"] is None
+
+
+async def test_create_item_title_too_long(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
+    response = await client.post(
+        "/api/v1/items/", json={"title": "t" * 256}, headers=auth_headers
+    )
+    assert response.status_code == 422
+
+
 async def test_other_users_item_forbidden(client: AsyncClient, auth_headers: dict[str, str]) -> None:
     item = await _create_item(client, auth_headers)
 
