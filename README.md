@@ -63,11 +63,15 @@ tests/                      # Async test suite (pytest-asyncio + httpx)
 
 ## Testing
 
+Tests run against the `app_test` PostgreSQL database from `docker-compose.yml`, through the real `get_db` dependency (real commits):
+
 ```bash
+docker compose up -d --wait
 uv run pytest
 ```
 
-Tests run against an in-memory SQLite database with the `get_db` dependency overridden — no external services required.
+- The schema is rebuilt with Alembic (`downgrade base` → `upgrade head`) once per test session, and every table is truncated after each test.
+- Point the suite at another database with `TEST_DATABASE_URL`. It refuses to run unless the database name ends with `_test`, because it truncates every table.
 
 ## Configuration
 
